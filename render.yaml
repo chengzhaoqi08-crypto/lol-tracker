@@ -1,0 +1,13 @@
+# Render Blueprint —— 在 Render 控制台 New → Blueprint → 连这个仓库即可自动部署。
+services:
+  - type: web
+    name: lol-tracker
+    runtime: docker
+    plan: free
+    region: singapore
+    dockerfilePath: ./Dockerfile
+    # Render 会自动注入 PORT 环境变量,应用已适配。
+    # 没有 Riot Key 时自动 demo 模式;要接真实数据就在面板加环境变量:
+    # envVars:
+    #   - key: Riot__ApiKey
+    #     value: RGAPI-xxxx

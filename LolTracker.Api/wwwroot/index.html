@@ -1,0 +1,68 @@
+<!DOCTYPE html>
+<html lang="zh">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>LoL 段位追踪平台</title>
+  <link rel="stylesheet" href="styles.css" />
+  <script src="https://cdn.jsdelivr.net/npm/chart.js@4.4.3/dist/chart.umd.min.js"></script>
+  <script src="https://cdn.jsdelivr.net/npm/chartjs-adapter-date-fns@3.0.0/dist/chartjs-adapter-date-fns.bundle.min.js"></script>
+</head>
+<body>
+  <header>
+    <div class="title">
+      <h1>⚔️ LoL 段位追踪平台</h1>
+      <p>追踪召唤师段位 · 累积历史快照 · 可视化爬分曲线</p>
+    </div>
+    <div id="demoBanner" class="banner hidden"></div>
+  </header>
+
+  <section class="search">
+    <input id="gameName" type="text" placeholder="游戏名 (例: Hide on bush)" />
+    <span class="hash">#</span>
+    <input id="tagLine" type="text" placeholder="标签 (例: KR1)" />
+    <select id="region">
+      <option value="kr">KR 韩服</option>
+      <option value="na1">NA 北美</option>
+      <option value="euw1">EUW 西欧</option>
+      <option value="eun1">EUNE 东北欧</option>
+      <option value="br1">BR 巴西</option>
+      <option value="jp1">JP 日服</option>
+      <option value="oc1">OCE 大洋洲</option>
+      <option value="la1">LAN 拉美北</option>
+      <option value="la2">LAS 拉美南</option>
+      <option value="tr1">TR 土耳其</option>
+      <option value="ru">RU 俄服</option>
+    </select>
+    <button id="trackBtn">追踪</button>
+    <span id="status" class="status"></span>
+  </section>
+
+  <main>
+    <section id="cards" class="cards"></section>
+
+    <section id="livePanel" class="live-panel hidden">
+      <div class="chart-head">
+        <h2 id="liveTitle"></h2>
+        <button id="closeLive" class="ghost">关闭</button>
+      </div>
+      <div id="liveBody"></div>
+    </section>
+
+    <section id="chartPanel" class="chart-panel hidden">
+      <div class="chart-head">
+        <h2 id="chartTitle"></h2>
+        <button id="closeChart" class="ghost">关闭</button>
+      </div>
+      <div id="ratingBox" class="rating"></div>
+      <canvas id="trendChart"></canvas>
+    </section>
+  </main>
+
+  <footer>
+    ASP.NET Core 8 · EF Core / SQLite · BackgroundService 定时快照 · Chart.js
+  </footer>
+
+  <script src="app.js"></script>
+</body>
+</html>
