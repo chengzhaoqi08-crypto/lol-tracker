@@ -4,6 +4,8 @@
 
 一个证明「外部 API 集成 + 数据缓存 + 时序分析」能力的全栈作品集项目。
 
+> 源码:<https://github.com/chengzhaoqi08-crypto/lol-tracker> · Docker 一键部署到 Render(见下方[部署](#部署到-render))。
+
 ## 技术栈
 
 - **后端**:ASP.NET Core 8 Web API(`HttpClient` 异步调外部 API、`System.Text.Json` 反序列化)
@@ -47,6 +49,21 @@ dotnet run
 3. 重启,即走真实 API。用真实 Riot ID 搜索(例如 `Hide on bush#KR1`,大区选 KR)。
 
 > 注:Riot Development Key 有较严的速率限制(20 req/s,100 req/2min),仅供本地演示。
+
+## 部署到 Render
+
+仓库已含 `Dockerfile` 和 `render.yaml`,应用监听 `PORT` 环境变量。
+
+1. 登录 <https://render.com>(可用 GitHub 账号登录)。
+2. **New → Blueprint** → 选择 `chengzhaoqi08-crypto/lol-tracker` 仓库 → Render 读取 `render.yaml` → **Apply**。
+   (或 **New → Web Service** → 选仓库 → 自动识别 Dockerfile → Plan 选 Free → Region 选 Singapore。)
+3. 首次构建约 3–5 分钟,完成后给你一个 `https://lol-tracker-xxxx.onrender.com`。
+
+说明:
+- **免费版**闲置 15 分钟会休眠,下次访问冷启动约 30–60 秒(与提示一致)。
+- **数据库是 SQLite,容器重启会重置** —— demo 模式数据本就是即时生成,影响不大;追踪记录会清空。要持久化可换 Postgres(改一行 provider)。
+- 默认 demo 模式,无需任何环境变量。**接真实 Riot 数据**:在 Render 服务的 Environment 加变量
+  `Riot__ApiKey = RGAPI-xxxx`(双下划线对应 `Riot:ApiKey`)。
 
 ## 主要接口
 
