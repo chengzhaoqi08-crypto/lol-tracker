@@ -28,6 +28,8 @@ public class DemoRiotClient : IRiotClient
           "GankGod", "BaronSteal", "SmiteKing", "影流之主", "FlashGod", "QSS爱好者", "Carry机器",
           "TpToWin", "WardMaster", "千珏小王子", "AfkAndy", "RoamBot", "破败King" };
     private static readonly string[] Tags = { "KR1", "NA1", "EUW", "BR1", "JP1", "CN" };
+    // demo 近期对局的模式分布(排位为主,混入大乱斗/匹配/竞技场)。
+    private static readonly int[] DemoQueues = { 420, 420, 420, 420, 450, 450, 400, 490, 1700 };
 
     public bool IsDemo => true;
 
@@ -78,7 +80,8 @@ public class DemoRiotClient : IRiotClient
             var cs = Math.Round(4.5 + skill * 4.5 + (rng.NextDouble() - 0.5), 1);
             var kp = Math.Round(Math.Clamp(0.45 + skill * 0.30 + (rng.NextDouble() - 0.5) * 0.2, 0, 1), 2);
             var dur = rng.Next(22, 40);
-            list.Add(new MatchPerf(Champs[rng.Next(Champs.Length)], win, kills, deaths, assists, cs, kp, dur));
+            var q = DemoQueues[rng.Next(DemoQueues.Length)];
+            list.Add(new MatchPerf(Champs[rng.Next(Champs.Length)], win, kills, deaths, assists, cs, kp, dur, q, Queues.Name(q)));
         }
         return Task.FromResult<IReadOnlyList<MatchPerf>?>(list);
     }

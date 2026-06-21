@@ -27,7 +27,9 @@ public record MatchPerf(
     int Assists,
     double CsPerMin,
     double KillParticipation, // 0..1
-    int DurationMinutes);
+    int DurationMinutes,
+    int QueueId = 0,
+    string Mode = "");
 
 /// <summary>当前对局里的一名玩家(Spectator-V5 阵容 + 段位富化)。</summary>
 public record LiveParticipant(

@@ -26,13 +26,23 @@ public class RiotClient : IRiotClient
         _champions = champions;
     }
 
-    // 平台大区 -> Account-V1 的区域路由值。
+    // 平台大区 -> Account-V1 的区域路由值(账号数据全球通用,americas/asia/europe 任一皆可)。
     private static string RegionalRoute(string platform) => platform.ToLowerInvariant() switch
     {
         "na1" or "br1" or "la1" or "la2" or "oc1" => "americas",
         "kr" or "jp1" => "asia",
         "ph2" or "sg2" or "th2" or "tw2" or "vn2" => "asia",
         "euw1" or "eun1" or "tr1" or "ru" or "me1" => "europe",
+        _ => "americas",
+    };
+
+    // 平台大区 -> Match-V5 的区域路由值。注意:OCE 与东南亚走 "sea"(与 Account-V1 不同)。
+    private static string MatchRoute(string platform) => platform.ToLowerInvariant() switch
+    {
+        "na1" or "br1" or "la1" or "la2" => "americas",
+        "kr" or "jp1" => "asia",
+        "euw1" or "eun1" or "tr1" or "ru" or "me1" => "europe",
+        "oc1" or "ph2" or "sg2" or "th2" or "tw2" or "vn2" => "sea",
         _ => "americas",
     };
 
@@ -83,10 +93,10 @@ public class RiotClient : IRiotClient
     public async Task<IReadOnlyList<MatchPerf>?> FetchRecentMatchesAsync(string puuid, string region, int count, CancellationToken ct = default)
     {
         region = string.IsNullOrWhiteSpace(region) ? "na1" : region.ToLowerInvariant();
-        var regional = RegionalRoute(region);
+        var regional = MatchRoute(region);
 
-        // 1) 最近 count 场对局 ID(只取排位)
-        var idsUrl = $"https://{regional}.api.riotgames.com/lol/match/v5/matches/by-puuid/{puuid}/ids?start=0&count={count}&type=ranked";
+        // 1) 最近 count 场对局 ID(全部模式:排位 / 匹配 / 大乱斗 / 斗魂竞技场 …)
+        var idsUrl = $"https://{regional}.api.riotgames.com/lol/match/v5/matches/by-puuid/{puuid}/ids?start=0&count={count}";
         using var idsDoc = await GetJsonAsync(idsUrl, ct);
         if (idsDoc is null) return null;
         var ids = idsDoc.RootElement.EnumerateArray().Select(e => e.GetString()!).ToList();
@@ -98,6 +108,7 @@ public class RiotClient : IRiotClient
             if (matchDoc is null) continue;
             var info = matchDoc.RootElement.GetProperty("info");
 
+            var queueId = info.TryGetProperty("queueId", out var qi) ? qi.GetInt32() : 0;
             var durationSec = info.GetProperty("gameDuration").GetInt32();
             if (durationSec > 10000) durationSec /= 1000; // 兼容旧版以毫秒计的对局
             var durMin = Math.Max(1.0, durationSec / 60.0);
@@ -121,14 +132,21 @@ public class RiotClient : IRiotClient
             var assists = me.GetProperty("assists").GetInt32();
             var cs = me.GetProperty("totalMinionsKilled").GetInt32()
                      + (me.TryGetProperty("neutralMinionsKilled", out var nm) ? nm.GetInt32() : 0);
-            var win = me.GetProperty("win").GetBoolean();
             var champ = me.TryGetProperty("championName", out var cn) ? cn.GetString() ?? "" : "";
             var myTeam = me.GetProperty("teamId").GetInt32();
             var tk = teamKills.GetValueOrDefault(myTeam);
             var kp = tk > 0 ? Math.Min(1.0, (kills + assists) / (double)tk) : 0;
 
+            // 斗魂竞技场没有传统胜负,用名次(前 4 名算赢);其余模式用 win 字段。
+            bool win;
+            if (Queues.IsArena(queueId) && me.TryGetProperty("placement", out var pl) && pl.ValueKind == JsonValueKind.Number)
+                win = pl.GetInt32() is > 0 and <= 4;
+            else
+                win = me.TryGetProperty("win", out var w) && w.GetBoolean();
+
             perf.Add(new MatchPerf(champ, win, kills, deaths, assists,
-                Math.Round(cs / durMin, 1), Math.Round(kp, 2), (int)durMin));
+                Math.Round(cs / durMin, 1), Math.Round(kp, 2), (int)durMin,
+                queueId, Queues.Name(queueId)));
         }
         return perf;
     }

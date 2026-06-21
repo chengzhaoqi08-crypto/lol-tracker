@@ -154,14 +154,17 @@ async function renderRating(id) {
   const b = r.breakdown;
   const pips = r.matches.map((m) => {
     const kda = `${m.kills}/${m.deaths}/${m.assists}`;
-    return `<div class="pip ${m.win ? "win" : "loss"}" title="${escapeHtml(m.championName)} · ${kda} · 补刀/分 ${m.csPerMin}">${m.win ? "胜" : "负"}</div>`;
+    const mode = m.mode ? `${m.mode} · ` : "";
+    return `<div class="pip ${m.win ? "win" : "loss"}" title="${mode}${escapeHtml(m.championName)} · ${kda} · 补刀/分 ${m.csPerMin}">${m.win ? "胜" : "负"}</div>`;
   }).join("");
+  const modes = (r.modeBreakdown || []).map((m) => `${escapeHtml(m.mode)} ×${m.count}`).join(" · ");
 
   box.innerHTML = `
     <div class="grade g-${r.tier}">${r.tier}</div>
     <div class="rating-meta">
-      <div class="score">近10局评分 <span class="num">${r.score}</span> / 100 · ${r.tier} 档 · ${escapeHtml(r.tierLabel)}</div>
-      <div class="bd">${r.wins}胜${r.games - r.wins}负 · 胜率 ${b.winRatePct}% · 场均KDA ${b.avgKda} · 补刀/分 ${b.avgCsPerMin} · 参团率 ${b.avgKillParticipationPct}%</div>
+      <div class="score">近${r.games}局评分 <span class="num">${r.score}</span> / 100 · ${r.tier} 档 · ${escapeHtml(r.tierLabel)}</div>
+      <div class="bd">${r.wins}胜${r.games - r.wins}负 · 胜率 ${b.winRatePct}% · 场均KDA ${b.avgKda} · 参团率 ${b.avgKillParticipationPct}%</div>
+      ${modes ? `<div class="bd modes">模式:${modes}</div>` : ""}
       <div class="pips">${pips}</div>
     </div>`;
 }
