@@ -1,10 +1,11 @@
-<Project Sdk="Microsoft.NET.Sdk.Web">
+﻿<Project Sdk="Microsoft.NET.Sdk.Web">
 
   <PropertyGroup>
     <TargetFramework>net8.0</TargetFramework>
     <Nullable>enable</Nullable>
     <ImplicitUsings>enable</ImplicitUsings>
     <RootNamespace>LolTracker.Api</RootNamespace>
+    <UserSecretsId>50d403fd-dc0f-486a-b483-980d2f19eb62</UserSecretsId>
   </PropertyGroup>
 
   <ItemGroup>
