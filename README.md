@@ -4,7 +4,8 @@
 
 一个证明「外部 API 集成 + 数据缓存 + 时序分析」能力的全栈作品集项目。
 
-> 源码:<https://github.com/chengzhaoqi08-crypto/lol-tracker> · Docker 一键部署到 Render(见下方[部署](#部署到-render))。
+> 🔗 **在线体验:<https://lol-tracker-sjv3.onrender.com>**(Render 免费版,闲置会休眠,首次打开冷启动约 30–60 秒)
+> · 源码:<https://github.com/chengzhaoqi08-crypto/lol-tracker> · 部署方式见下方[部署](#部署到-render)。
 
 ## 技术栈
 
