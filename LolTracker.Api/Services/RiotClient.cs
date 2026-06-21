@@ -51,17 +51,16 @@ public class RiotClient : IRiotClient
         var resolvedName = account.TryGetProperty("gameName", out var gn) ? gn.GetString() ?? gameName : gameName;
         var resolvedTag = account.TryGetProperty("tagLine", out var tl) ? tl.GetString() ?? tagLine : tagLine;
 
-        // 2) puuid -> summonerId / 头像 / 等级
+        // 2) puuid -> 头像 / 等级(注:Riot 已弃用 encrypted summonerId,Summoner-V4 不再返回 "id")
         var summonerUrl = $"https://{region}.api.riotgames.com/lol/summoner/v4/summoners/by-puuid/{puuid}";
         using var summonerDoc = await GetJsonAsync(summonerUrl, ct);
         if (summonerDoc is null) return null;
         var summoner = summonerDoc.RootElement;
-        var summonerId = summoner.GetProperty("id").GetString()!;
         var profileIconId = summoner.TryGetProperty("profileIconId", out var pi) ? pi.GetInt32() : 0;
         var summonerLevel = summoner.TryGetProperty("summonerLevel", out var sl) ? sl.GetInt32() : 0;
 
-        // 3) summonerId -> 段位条目
-        var leagueUrl = $"https://{region}.api.riotgames.com/lol/league/v4/entries/by-summoner/{summonerId}";
+        // 3) puuid -> 段位条目(League-V4 by-puuid,免去已废弃的 summonerId)
+        var leagueUrl = $"https://{region}.api.riotgames.com/lol/league/v4/entries/by-puuid/{puuid}";
         using var leagueDoc = await GetJsonAsync(leagueUrl, ct);
         var ranks = new List<RankEntry>();
         if (leagueDoc is not null)
@@ -160,7 +159,14 @@ public class RiotClient : IRiotClient
                 tag = rs[(idx + 1)..];
             }
 
-            var (tier, div, lp, wins, losses) = await FetchSoloRankAsync(pPuuid, region, ct);
+            // 个别玩家可能没有 puuid(观战数据缺失)或拿不到段位(限速)—— 单人失败不影响整局。
+            string tier = "UNRANKED", div = "";
+            int lp = 0, wins = 0, losses = 0;
+            if (!string.IsNullOrEmpty(pPuuid))
+            {
+                try { (tier, div, lp, wins, losses) = await FetchSoloRankAsync(pPuuid, region, ct); }
+                catch (RiotApiException) { }
+            }
             parts.Add(new LiveParticipant(pPuuid, name, tag, teamId, champId,
                 await _champions.NameAsync(champId, ct), tier, div, lp, wins, losses));
         }
@@ -172,6 +178,7 @@ public class RiotClient : IRiotClient
     private async Task<(string Tier, string Division, int Lp, int Wins, int Losses)> FetchSoloRankAsync(
         string puuid, string region, CancellationToken ct)
     {
+        if (string.IsNullOrEmpty(puuid)) return ("UNRANKED", "", 0, 0, 0);
         var url = $"https://{region}.api.riotgames.com/lol/league/v4/entries/by-puuid/{puuid}";
         using var doc = await GetJsonAsync(url, ct);
         if (doc is null) return ("UNRANKED", "", 0, 0, 0);
